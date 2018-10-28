@@ -16,17 +16,27 @@
     </ContextMenu>
 
 
-    <!-- the application's NotifyIcon - started from App.xaml.cs. Declares its own view model. -->
-    <tb:TaskbarIcon x:Key="NotifyIcon"
-                    IconSource="/red.ico"
+    <tb:TaskbarIcon x:Key="GreenIcon"
+                    Visibility="{Binding MyVisibility}"
+                    IconSource="/green.ico"
                     ToolTipText="Double-click for window, right-click for menu"
-                    DoubleClickCommand="{Binding ShowWindowCommand}"
+                    DoubleClickCommand="{Binding DoubleClickCommand}"
                     ContextMenu="{StaticResource SysTrayMenu}">
-
-        <!-- self-assign a data context (could also be done programmatically) -->
         <tb:TaskbarIcon.DataContext>
             <local:NotifyIconViewModel />
         </tb:TaskbarIcon.DataContext>
     </tb:TaskbarIcon>
 
+    <tb:TaskbarIcon x:Key="RedIcon"
+                    Visibility="{Binding MyVisibility}"
+                    IconSource="/red.ico"
+                    ToolTipText="Double-click for window, right-click for menu"
+                    DoubleClickCommand="{Binding DoubleClickCommand}"
+                    ContextMenu="{StaticResource SysTrayMenu}">
+        <tb:TaskbarIcon.DataContext>
+            <local:NotifyIconViewModel />
+        </tb:TaskbarIcon.DataContext>
+    </tb:TaskbarIcon>
+
+    
 </ResourceDictionary>

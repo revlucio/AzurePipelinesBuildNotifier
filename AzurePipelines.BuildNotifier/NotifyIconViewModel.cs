@@ -1,7 +1,12 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using AzurePipelines.BuildNotifier;
+using AzurePipelines.BuildNotifier.Annotations;
 
 namespace Windowless_Sample
 {
@@ -10,8 +15,38 @@ namespace Windowless_Sample
     /// view model is assigned to the NotifyIcon in XAML. Alternatively, the startup routing
     /// in App.xaml.cs could have created this view model, and assigned it to the NotifyIcon.
     /// </summary>
-    public class NotifyIconViewModel
+    public class NotifyIconViewModel : INotifyPropertyChanged
     {
+        private Visibility vis;
+        public Visibility MyVisibility
+        {
+            get { return vis; }
+            set
+            {
+                if (vis != value)
+                {
+                    vis = value;
+                    OnPropertyChanged("MyVisibility");  // To notify when the property is changed
+                }
+            }
+        }
+        
+        public ICommand DoubleClickCommand
+        {
+            get
+            {
+                return new DelegateCommand
+                {
+                    CanExecuteFunc = () => true,
+                    CommandAction = () =>
+                    {
+                        vis = vis == Visibility.Hidden ? Visibility.Visible : Visibility.Hidden;
+                        OnPropertyChanged("MyVisibility");
+                    }
+                };
+            }
+        }
+        
         /// <summary>
         /// Shows a window, if none is already open.
         /// </summary>
@@ -56,6 +91,14 @@ namespace Windowless_Sample
             {
                 return new DelegateCommand {CommandAction = () => Application.Current.Shutdown()};
             }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 
