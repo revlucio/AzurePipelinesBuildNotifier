@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using Hardcodet.Wpf.TaskbarNotification;
 using Microsoft.TeamFoundation.Build.WebApi;
-using Microsoft.VisualStudio.Services.Common;
-using Microsoft.VisualStudio.Services.WebApi;
 using Windowless_Sample;
 
 namespace AzurePipelines.BuildNotifier
@@ -16,47 +16,49 @@ namespace AzurePipelines.BuildNotifier
     /// </summary>
     public partial class App
     {
-        private TaskbarIcon _notifyIcon;
-        private TaskbarIcon _notifyIcon2;
+        private TaskbarIcon _redIcon;
+        private TaskbarIcon _greenIcon;
         
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            _notifyIcon = (TaskbarIcon) FindResource("RedIcon");
+            _redIcon = (TaskbarIcon) FindResource("RedIcon");
 
-            _notifyIcon2 = (TaskbarIcon) FindResource("GreenIcon");
-            var greenVm = (NotifyIconViewModel) _notifyIcon2.DataContext;
+            _greenIcon = (TaskbarIcon) FindResource("GreenIcon");
+            var greenVm = (NotifyIconViewModel) _greenIcon.DataContext;
             greenVm.MyVisibility = Visibility.Hidden;
             
-            StartFileWatcher();
+//            StartFileWatcher();
 
-//            while (true)
-//            {
-//                Thread.Sleep(TimeSpan.FromSeconds(10));
-//                CheckBuildStatus();
-//            }
+            Task.Run(() =>
+            {
+                while (true)
+                {
+                    Thread.Sleep(TimeSpan.FromSeconds(10));
+                    CheckBuildStatus2();
+                }    
+            });
         }
 
-        private void CheckBuildStatus()
+        public void CheckBuildStatus()
         {
-            var collectionUri = "https://dev.azure.com/revlucio";
-            var token = "befbvymjfrdx6ba74xnm732s6x2gicvdcfcbanxydnbeo7p3rlra";
-            var connection = new VssConnection(new Uri(collectionUri), new VssBasicCredential("build-api", token));
+            var buildServer = new BuildServer(
+                "https://dev.azure.com/revlucio", 
+                "befbvymjfrdx6ba74xnm732s6x2gicvdcfcbanxydnbeo7p3rlra");
 
-            var buildClient = connection.GetClient<BuildHttpClient>();
-
-            var project = "street-runner";
-            var definitions = new[] {4};
-
-            var successful = buildClient
-              .GetBuildsAsync(project, definitions).Result
-              .Where(build => build.Status == BuildStatus.Completed)
-              .OrderBy(build => build.StartTime)
-              .Last()
-              .Result == BuildResult.Succeeded;
+            ChangeIcons(buildServer.WasLastBuildSuccessful("street-runner", 4) == false);
+        }
+        
+        public void CheckBuildStatus2()
+        {
+            var azureSettings = AzureSettings.FromFileSystem();
             
-            ChangeIcons(successful == false);
+            var buildServer = new BuildServer(
+                azureSettings.ServerUrl, 
+                azureSettings.Token);
+
+            ChangeIcons(buildServer.WasLastBuildSuccessful(azureSettings.ProjectName, azureSettings.BuildId) == false);
         }
 
         private void StartFileWatcher()
@@ -87,20 +89,20 @@ namespace AzurePipelines.BuildNotifier
         {
             this.Dispatcher.Invoke(() =>
             {
-                var redVm = (NotifyIconViewModel) _notifyIcon.DataContext;
-                var greenVm = (NotifyIconViewModel) _notifyIcon2.DataContext;
+                var redVm = (NotifyIconViewModel) _redIcon.DataContext;
+                var greenVm = (NotifyIconViewModel) _greenIcon.DataContext;
                 
                 if (red)
                 {
                     redVm.MyVisibility = Visibility.Visible;
                     greenVm.MyVisibility = Visibility.Hidden;
-                    _notifyIcon.ShowBalloonTip("Build Failed", "A build has failed", BalloonIcon.None);
+                    _redIcon.ShowBalloonTip("Build Failed", "A build has failed", BalloonIcon.None);
                 }
                 else
                 {
                     redVm.MyVisibility = Visibility.Hidden;
                     greenVm.MyVisibility = Visibility.Visible;
-                    _notifyIcon2.ShowBalloonTip("Build Passed", "A build has passed", BalloonIcon.None);
+                    _greenIcon.ShowBalloonTip("Build Passed", "A build has passed", BalloonIcon.None);
                 }
             });
         }
