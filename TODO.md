@@ -2,9 +2,10 @@
 - change colour of icon red/green X
 - change colour of icon from outside the vm X
 - maybe hook into a file and change it at runtime X
-    
-- hook into vsts api
+- hook into vsts api X
 
 - add auth options
 - add ability to choose vsts organisation/project/builds
+- when clicking icon should show a summary window with links to the builds
+- should notify when builds are running/have failed
 - how to structure it properly with mvvm?

@@ -28,12 +28,14 @@ namespace AzurePipelines.BuildNotifier
             _notifyIcon2 = (TaskbarIcon) FindResource("GreenIcon");
             var greenVm = (NotifyIconViewModel) _notifyIcon2.DataContext;
             greenVm.MyVisibility = Visibility.Hidden;
+            
+            StartFileWatcher();
 
-            while (true)
-            {
-                Thread.Sleep(TimeSpan.FromSeconds(10));
-                CheckBuildStatus();
-            }
+//            while (true)
+//            {
+//                Thread.Sleep(TimeSpan.FromSeconds(10));
+//                CheckBuildStatus();
+//            }
         }
 
         private void CheckBuildStatus()
@@ -87,15 +89,18 @@ namespace AzurePipelines.BuildNotifier
             {
                 var redVm = (NotifyIconViewModel) _notifyIcon.DataContext;
                 var greenVm = (NotifyIconViewModel) _notifyIcon2.DataContext;
+                
                 if (red)
                 {
                     redVm.MyVisibility = Visibility.Visible;
                     greenVm.MyVisibility = Visibility.Hidden;
+                    _notifyIcon.ShowBalloonTip("Build Failed", "A build has failed", BalloonIcon.None);
                 }
                 else
                 {
                     redVm.MyVisibility = Visibility.Hidden;
                     greenVm.MyVisibility = Visibility.Visible;
+                    _notifyIcon2.ShowBalloonTip("Build Passed", "A build has passed", BalloonIcon.None);
                 }
             });
         }
